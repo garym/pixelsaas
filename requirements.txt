@@ -1,0 +1,5 @@
+BlinkyTape
+pyserial
+pickleDB
+DaemonLite
+inotify
