@@ -15,7 +15,9 @@
 #  limitations under the License.
 
 import argparse
+from itertools import cycle
 import logging
+import random
 import time
 import os
 
@@ -36,6 +38,24 @@ colours = {
     'green': (0.0, 1.0, 0.0),
     'blue': (0.0, 0.0, 1.0),
 }
+
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+CYAN = (0, 255, 255)
+MAGENTA = (255, 0, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREY = (63, 63, 63)
+LIGHT_GREY_001 = (1, 1, 1)
+LIGHT_GREY_002 = (2, 2, 2)
+LIGHT_GREY_003 = (3, 3, 3)
+P1_COLOUR = RED
+P2_COLOUR = GREEN
+P3_COLOUR = BLUE
+P4_COLOUR = YELLOW
+JUNK_COLOUR = GREY
 
 DEF_DBFILE = '/tmp/pixelsaas.db'
 LED_COUNT = 60
@@ -64,6 +84,7 @@ def process_args():
     setup_lights_off_parser(subparsers, common_parser)
     setup_set_pixel_parser(subparsers, [common_parser, db_parser])
     setup_get_pixel_parser(subparsers, [common_parser, db_parser])
+    setup_gravwell_parser(subparsers, [common_parser, db_parser])
     setup_daemon_parser(subparsers, [common_parser, db_parser]) 
 
     return parser.parse_args()
@@ -76,7 +97,7 @@ def setup_lights_on_parser(subparsers, common_parser):
         help='Turn on light.'
     )
     parser_on.set_defaults(func=light_on)
-    
+
 
 def light_on(blinky, args):
     c = args.max_light_level
@@ -94,6 +115,151 @@ def setup_lights_off_parser(subparsers, common_parser):
 
 def light_off(blinky, args):
     blinky.displayColor(0, 0, 0)
+
+
+def setup_gravwell_parser(subparsers, parent_parsers):
+    parser_gravwell = subparsers.add_parser(
+        'gravwell', parents=parent_parsers,
+        description='Run gravwell demo.',
+        help='Run gravwell demo.'
+    )
+    parser_gravwell.add_argument('--forever', default=False,
+                                 action="store_true",
+                                 help='keep on going')
+    parser_gravwell.add_argument('--frame-length', default=0.25, type=float,
+                                 help='Length of a frame in seconds.')
+    parser_gravwell.add_argument('--frames-per-step', default=4, type=int,
+                                 help='Number of frames per simulation step.')
+    parser_gravwell.set_defaults(func=gravwell_demo)
+
+
+BACKGROUND_COLOURS = [BLACK, LIGHT_GREY_001, LIGHT_GREY_002, LIGHT_GREY_002]
+gravwell_background = [random.choice(BACKGROUND_COLOURS) for j in range(LED_COUNT)]
+gravwell_bg_iter = cycle(gravwell_background)
+
+def _set_background(db):
+    for pos in reversed(range(LED_COUNT)):
+        _set_pixel(db, pos, gravwell_bg_iter.next())
+    gravwell_bg_iter.next()
+
+
+def display_state(db, state):
+    _set_background(db)
+    for player, playerstate in state.items():
+        if playerstate['pos'] > -1:
+            _set_pixel(db, 60 - playerstate['pos'], playerstate['colour'])
+
+
+def gravwell_demo(blinky, args):
+    # initialisation
+    db = setup_db_conn(args.db_file)
+
+    frame_length = args.frame_length
+    frames_per_step = args.frames_per_step
+
+    # game state
+    while True:
+        state = {
+            'player1': {'pos': 0, 'colour': P1_COLOUR},
+            'player2': {'pos': 0, 'colour': P2_COLOUR},
+            'player3': {'pos': 0, 'colour': P3_COLOUR},
+            'player4': {'pos': 0, 'colour': P4_COLOUR},
+            'junk1': {'pos': 26, 'colour': JUNK_COLOUR},
+            'junk2': {'pos': 36, 'colour': JUNK_COLOUR},
+        }
+
+        fuel_cards = [
+            {'name': 'Ar', 'value': 1, 'type': 'S'},
+            {'name': 'B', 'value': 2, 'type': 'S'},
+            {'name': 'C', 'value': 3, 'type': 'S'},
+            {'name': 'Dy', 'value': 5, 'type': 'S'},
+            {'name': 'Es', 'value': 2, 'type': 'S'},
+            {'name': 'F', 'value': 6, 'type': 'S'},
+            {'name': 'G', 'value': 5, 'type': 'S'},
+            {'name': 'H', 'value': 4, 'type': 'S'},
+            {'name': 'Ir', 'value': 6, 'type': 'S'},
+            {'name': 'Ja', 'value': 2, 'type': 'TB'},
+            {'name': 'Kr', 'value': 2, 'type': 'R'},
+            {'name': 'L', 'value': 4, 'type': 'S'},
+            {'name': 'Mg', 'value': 10, 'type': 'S'},
+            {'name': 'Ne', 'value': 6, 'type': 'R'},
+            {'name': 'O', 'value': 7, 'type': 'S'},
+            {'name': 'Pu', 'value': 5, 'type': 'S'},
+            {'name': 'Q', 'value': 3, 'type': 'TB'},
+            {'name': 'Ra', 'value': 9, 'type': 'S'},
+            {'name': 'S', 'value': 9, 'type': 'S'},
+            {'name': 'Th', 'value': 2, 'type': 'S'},
+            {'name': 'U', 'value': 5, 'type': 'R'},
+            {'name': 'V', 'value': 7, 'type': 'S'},
+            {'name': 'W', 'value': 8, 'type': 'S'},
+            {'name': 'Xe', 'value': 3, 'type': 'R'},
+            {'name': 'Yr', 'value': 8, 'type': 'S'},
+            {'name': 'Zr', 'value': 7, 'type': 'S'},
+        ]
+
+        random.shuffle(fuel_cards)
+        display_state(db, state)
+
+        for step_state in play_round(db, state, fuel_cards):
+            for i in range(frames_per_step):
+                display_state(db, step_state)
+                time.sleep(frame_length)
+
+        print("Finished")
+        if not args.forever:
+            return
+        for i in range(300):
+            display_state(db, state)
+            time.sleep(frame_length)
+
+
+def next_free(db, state, position, direction):
+    for offset in range(LED_COUNT):
+        new_position = position + offset * direction
+        if not any(p['pos'] == new_position for p in state.values()):
+            return new_position
+
+
+def play_round(db, state, fuel_cards):
+    winner = None
+    players = [p for p in state.keys() if p.startswith('p')]
+
+    while winner is None:
+        random.shuffle(fuel_cards)
+        card_cycler = cycle(fuel_cards)
+        for r in range(3):
+            # TODO: actual mechanic is for players to select card to play and order is
+            #       determined alphabetically
+            for player in players:
+                # play card
+                card = card_cycler.next()
+                if card['type'] == 'S':
+                    # TODO: determine direction based on nearest player
+                    new_position = next_free(db, state, state[player]['pos'] + card['value'], 1)
+                    state[player]['pos'] = new_position
+                elif card['type'] == 'R':
+                    # TODO: determine direction based on nearest player
+                    new_position = next_free(db, state, state[player]['pos'] - card['value'], -1)
+                    state[player]['pos'] = new_position
+                else:
+                    for opponent in state.keys():
+                        # TODO: should be a definite order for this
+                        if opponent is not player:
+                            if state[opponent]['pos'] > state[player]['pos']:
+                                new_position = next_free(db, state, state[opponent]['pos'] - card['value'], -1)
+                            else:
+                                new_position = next_free(db, state, state[opponent]['pos'] + card['value'], 1)
+                                state[opponent]['pos'] += card['value']
+                            state[opponent]['pos'] = new_position
+
+                if state[player]['pos'] >= 59:
+                    winner = True
+                    state[player]['pos'] = 59
+                if state[player]['pos'] < -1:
+                    state[player]['pos'] = -1
+                yield state
+                if winner:
+                    return
 
 
 def setup_db_conn(db_file):
@@ -254,6 +420,6 @@ class PixelDB(object):
     def delete_pixel(self, index):
         return _delete_pixel(self.conn, index)
 
-        
+
 if __name__ == '__main__':
     main()

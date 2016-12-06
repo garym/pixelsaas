@@ -3,3 +3,10 @@ pyserial
 pickleDB
 DaemonLite
 inotify
+
+Flask
+Flask-HTTPAuth
+Flask-RESTful
+Flask-SocketIO
+gunicorn
+wsgiref
