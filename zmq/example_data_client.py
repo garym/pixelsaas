@@ -20,7 +20,6 @@ in the hope that it will get published in the appropriate form for the
 display.
 """
 
-import sys
 import zmq
 import json
 import settings
@@ -37,7 +36,7 @@ GOOD = (0, 0, 255)
 WARNING = (255, 106, 0)
 ERROR = (255, 0, 0)
 
-for j in range(1000):
+for j in range(100):
     for i in range(64):
         rgb = random.choice((GOOD, WARNING, ERROR))
         data = {
@@ -49,6 +48,13 @@ for j in range(1000):
         }
         sender.send_json(json.dumps(data))
         response = sender.recv_json()
+    data = {
+        'topic': 'paas_showpixels',
+        'data': {},
+    }
+    sender.send_json(json.dumps(data))
+    response = sender.recv_json()
+
 
 for i, status in enumerate(itertools.cycle((GOOD, WARNING, ERROR))):
     if i > 100:

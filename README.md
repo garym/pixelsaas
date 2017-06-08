@@ -3,7 +3,7 @@ Playing with leds
 
 ## Prerequisites
 
-This experiment requires Python 2.7 - expect this to increase to target Python 3.4+ at some point. I suggest the use of virtualenvwrapper or just bare virtualenv. These instructions will assume the former.
+The original experiment required Python 2.7. Newer code in the `zmq` directory is only tested on Python 3.4+. I suggest the use of virtualenvwrapper or just bare virtualenv. These instructions will assume the former.
 
 Finally, git is considered required for getting a copy of the code.
 

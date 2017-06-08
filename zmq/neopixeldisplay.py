@@ -43,7 +43,7 @@ import unicornhat as unicorn
 
 unicorn.set_layout(unicorn.AUTO)
 unicorn.rotation(0)
-unicorn.brightness(0.2)
+unicorn.brightness(1)
 
 WIDTH, HEIGHT = unicorn.get_shape()
 keymap = {}
@@ -59,6 +59,11 @@ if isinstance(topic_filter, bytes):
     topic_filter = topic_filter.decode('ascii')
 subsocket.setsockopt_string(zmq.SUBSCRIBE, topic_filter)
 
+try:
+    ALLOCATION_SCHEME = settings.pixel_allocation_scheme
+except AttributeError:
+    ALLOCATION_SCHEME = 'linear'
+
 
 def get_position_for_key(key):
     if key in keymap:
@@ -68,7 +73,10 @@ def get_position_for_key(key):
     if not positions:
         return (0, 0)
 
-    position = random.choice(list(positions))
+    if ALLOCATION_SCHEME == 'random':
+        position = random.choice(list(positions))
+    else:
+        position = sorted(list(positions))[-1]
     keymap[key] = position
     return position
 
@@ -94,7 +102,9 @@ def mainloop():
             set_pixel(data)
         elif topic == 'paas_allpixels':
             set_all_pixels(data)
-        unicorn.show()
+
+        if topic == 'paas_showpixels' or data.get('show', True):
+            unicorn.show()
 
 
 if __name__ == '__main__':
