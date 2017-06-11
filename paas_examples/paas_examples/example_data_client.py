@@ -22,10 +22,10 @@ display.
 
 import zmq
 import json
-import settings
 import random
 import time
 import itertools
+from paas_common import settings
 
 context = zmq.Context()
 
@@ -36,36 +36,46 @@ GOOD = (0, 0, 255)
 WARNING = (255, 106, 0)
 ERROR = (255, 0, 0)
 
-for j in range(100):
-    for i in range(64):
-        rgb = random.choice((GOOD, WARNING, ERROR))
+def individual_pixel_demo():
+    for j in range(100):
+        for i in range(64):
+            rgb = random.choice((GOOD, WARNING, ERROR))
+            data = {
+                'topic': 'paas_pixel',
+                'data': {
+                    'key': "item_{}".format(i),
+                    'rgb': rgb,
+                },
+            }
+            sender.send_json(json.dumps(data))
+            response = sender.recv_json()
         data = {
-            'topic': 'paas_pixel',
+            'topic': 'paas_showpixels',
+            'data': {},
+        }
+        sender.send_json(json.dumps(data))
+        response = sender.recv_json()
+
+
+def full_display_demo():
+    for i, status in enumerate(itertools.cycle((GOOD, WARNING, ERROR))):
+        if i > 100:
+            break
+        data = {
+            'topic': 'paas_allpixels',
             'data': {
                 'key': "item_{}".format(i),
-                'rgb': rgb,
+                'rgb': status,
             },
         }
         sender.send_json(json.dumps(data))
         response = sender.recv_json()
-    data = {
-        'topic': 'paas_showpixels',
-        'data': {},
-    }
-    sender.send_json(json.dumps(data))
-    response = sender.recv_json()
+        time.sleep(1)
 
 
-for i, status in enumerate(itertools.cycle((GOOD, WARNING, ERROR))):
-    if i > 100:
-        break
-    data = {
-        'topic': 'paas_allpixels',
-        'data': {
-            'key': "item_{}".format(i),
-            'rgb': status,
-        },
-    }
-    sender.send_json(json.dumps(data))
-    response = sender.recv_json()
-    time.sleep(1)
+def main():
+    individual_pixel_demo()
+    full_display_demo()
+
+if __name__ == '__main__':
+    main()

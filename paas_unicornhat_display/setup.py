@@ -1,4 +1,4 @@
-#  Copyright 2016 Gary Martin
+#  Copyright 2017 Gary Martin
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -12,31 +12,29 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
 
 requires = (
-    'BlinkyTape',
-    'pyserial',
-)
-versions = (
-    '0.1.0',
+    'pyzmq',
+    'paas-common===0.2.0-SNAPSHOT',
+    'unicornhat',
 )
 
 setup(
-    name='PixelsAAS',
-    version=versions[-1],
-    description='Providing pixels as a service',
+    name='paas_unicornhat_display',
+    version='0.2.0-SNAPSHOT',
+    description='Provides the unicornhat display as a consumer of paas data.',
     author='Gary Martin',
     author_email='gary.martin@physics.org',
     url='https://github.com/garym/PixelsAAS',
-    requires=requires,
+    install_requires=requires,
     entry_points={
         'console_scripts': [
-            'paas=paas.pixelcontrol:main',
+            'paas_unicornhat=paas_unicornhat_display.unicornhat_display:main',
         ],
     },
+    packages=(
+        'paas_unicornhat_display',
+    ),
 )

@@ -18,10 +18,10 @@
 
 from itertools import cycle
 import json
-import settings
 import zmq
 import random
 import time
+from paas_common import settings
 
 context = zmq.Context()
 sender = context.socket(zmq.REQ)
@@ -242,7 +242,8 @@ def mainloop():
         printstate(step_state)
         time.sleep(between_game_frame_length)
 
-if __name__ == '__main__':
+
+def main():
     try:
         mainloop()
     except KeyboardInterrupt:
@@ -250,3 +251,6 @@ if __name__ == '__main__':
     finally:
         sender.close()
         context.term()
+
+if __name__ == '__main__':
+    main()

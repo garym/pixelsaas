@@ -37,8 +37,8 @@ import json
 import random
 import sys
 import zmq
-import settings
 import unicornhat as unicorn
+from paas_common import settings
 
 
 unicorn.set_layout(unicorn.AUTO)
@@ -107,7 +107,7 @@ def mainloop():
             unicorn.show()
 
 
-if __name__ == '__main__':
+def main():
     try:
         mainloop()
     except KeyboardInterrupt:
@@ -115,3 +115,6 @@ if __name__ == '__main__':
     finally:
         subsocket.close()
         context.term()
+
+if __name__ == '__main__':
+    main()

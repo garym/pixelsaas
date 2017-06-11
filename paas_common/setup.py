@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #  Copyright 2017 Gary Martin
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +12,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""A simple subscriber to the main publisher."""
+from setuptools import setup
 
-import sys
-import zmq
-import json
-import settings
 
-context = zmq.Context()
-
-listener = context.socket(zmq.SUB)
-listener.connect(settings.pubSubPort)
-listener.setsockopt(zmq.SUBSCRIBE, b'pixel')
-
-while True:
-    data = listener.recv()
-
-    print("received:" , data)
+setup(
+    name='paas_common',
+    version='0.2.0-SNAPSHOT',
+    description='Provides shared code for paas.',
+    author='Gary Martin',
+    author_email='gary.martin@physics.org',
+    url='https://github.com/garym/PixelsAAS',
+    packages=(
+        'paas_common',
+    ),
+)

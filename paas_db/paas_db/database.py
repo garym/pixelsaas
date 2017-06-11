@@ -19,8 +19,8 @@ subscribes to into the database"""
 
 import zmq
 import json
-import settings
 import pickledb
+from paas_common import settings
 
 context = zmq.Context()
 subsocket = context.socket(zmq.SUB)
@@ -60,7 +60,8 @@ def mainloop():
             data = retrieve_data(servsocket.recv())
             servsocket.send(data)
 
-if __name__ == '__main__':
+
+def main():
     try:
         mainloop()
     except KeyboardInterrupt:
@@ -69,3 +70,6 @@ if __name__ == '__main__':
         subsocket.close()
         servsocket.close()
         context.term()
+
+if __name__ == '__main__':
+    main()

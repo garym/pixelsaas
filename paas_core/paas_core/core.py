@@ -22,7 +22,7 @@ import os
 import os.path
 import zmq
 import json
-import settings
+from paas_common import settings
 
 for port in (settings.dataInputPort, settings.pubSubPort):
     if port.startswith('ipc://'):
@@ -51,7 +51,8 @@ def mainloop():
         returnmsg = {"message": "Received message on topic '{}'".format(topic)}
         receiver.send_json(json.dumps(returnmsg))
 
-if __name__ == '__main__':
+
+def main():
     try:
         mainloop()
     except KeyboardInterrupt:
@@ -60,3 +61,6 @@ if __name__ == '__main__':
         pubsocket.close()
         receiver.close()
         context.term()
+
+if __name__ == '__main__':
+    main()
